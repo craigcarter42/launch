@@ -3,7 +3,7 @@ Quickly launch any application from the command line with minimal effort. Many m
 
 enjoy!
 
-## ToDo:
+### ToDo:
 1.   Index multiple folders  
 2.   Store index information in conf file  
 3.   Create shortcuts for applications  
