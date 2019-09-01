@@ -2,7 +2,6 @@
 try:
     import os
     import sys
-    import fnmatch
     import subprocess
 except:
     print('module import error'); quit()
@@ -13,7 +12,7 @@ except:
 #   Create shortcuts for applications
 #   Index/Re-Index/Delete Index options
 #   Autocompletion of application names
-#   Allow for importing
+#   oswalk
 
 INFO = '''-- launch v.1
    Quickly index and launch applications in located in the /Applications folder
@@ -26,13 +25,15 @@ class Launch:
     def __init__(self):
         self.applications = []
         self.source = '/Applications'
-        self.index = []
+        self.index = {}
 
     def get_applications(self, count=0):
         apps = os.listdir(self.source)
         for app in apps:
-            if fnmatch.fnmatch(app, '*.app'):
+            if '.app' in app:
+                app = app.replace('.app', '')
                 self.applications.append(app)
+                self.index[app.lower()] = app
                 count = count + 1
         return(self.applications)
         
@@ -40,15 +41,6 @@ class Launch:
         for app in self.applications:
             print(' > {}. {}'.format(count, app))
             count = count + 1
-
-    def index_applications(self):
-        for app in self.applications:
-            if ' ' in app:
-                app = app.replace(' ', '\ ')
-                self.index.append(app)
-            else:
-                self.index.append(app)
-        return(self.index)
 
     def launch_application(self, app):
         cmd = "/usr/bin/open " + self.source + '/' + app
@@ -59,7 +51,6 @@ class Launch:
 if __name__ == '__main__':
     launch = Launch()
     launch.get_applications()
-    launch.index_applications()
 
     args = sys.argv
     if len(args[1:]) == 0: print('try: --help'); quit()
@@ -70,8 +61,10 @@ if __name__ == '__main__':
     elif found_args == '--help':
         print(INFO)
         
-    found_args = found_args.replace(' ', '\ ')
-    if '.app' not in found_args:
-        found_args = found_args + '.app'
+    found_args = found_args.lower()
+    found_args = found_args.replace('.app', '')
     if found_args in launch.index:
-        launch.launch_application(found_args)
+        app = launch.index[found_args]
+        app = app.replace(' ', '\ ')
+        app = app + '.app'
+        launch.launch_application(app)
