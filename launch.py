@@ -46,7 +46,9 @@ class Launch:
         elif args == '-sources':
             for source in self.sources:
                 print(' > {}'.format(source))
-            exit()
+                exit()
+        else:
+            pass
 
     def get_applications(self, count=1):
         for source in self.sources:
