@@ -17,20 +17,55 @@ INFO = '''-- launch v.2
    Quickly index and launch applications in located in the /Applications folder
    in macOS. Applications nested within folders will not be found.
 
-   --list    list out all applications in the /Applications folder
-   --help    print out this help information'''
+   -list      list out all applications in the /Applications folder
+   -help      print out this help information
+   -sources   view all sources being indexed'''
 
 class Launch:
     def __init__(self):
         self.index = {}
         self.applications = []
-        self.keys = ['-help',
-                     '-list',
-                     '-sources'
+        self.directories = []
+        self.contents = []
+        self.keys = [
+                      '-help',
+                      '-list',
+                      '-sources'
                      ]
-        self.sources = ['/Applications',
-                        '/Applications/Utilities'
+
+        self.sources = [
+                         '/Applications',
+                         '/Users/craigcarter/Applications'
                        ]
+                       
+    def crawl(self, path):
+        self.contents = []
+        for ls in os.listdir(path):
+            ls = ls.replace(' ', '\ ')
+            self.contents.append('{}/{}'.format(path, ls))
+
+    def check_file_type(self, path):
+        app = path.split('/')
+        for a in app:
+            if '.app' in a:
+                a = a.replace('.app','')
+                if a not in self.applications:
+                    self.applications.append('{}'.format(a))
+                if a.lower() not in self.index:
+                    self.index[a.lower()] = path
+
+        if os.path.isdir(path) and '.app' not in path:
+            self.directories.append('{}'.format(path))
+
+    def get_applications(self):
+        for source in self.sources:
+            self.crawl(source)
+            for content in self.contents:
+                self.check_file_type(content)
+            for directory in self.directories:
+                self.crawl(directory)
+                for content in self.contents:
+                    self.check_file_type(content)
 
     def check_sources(self):
         for source in self.sources:
@@ -40,28 +75,15 @@ class Launch:
 
     def check_args(self, args):
         if args == '-list':
-            self.list_applications(); exit()
+            self.list_applications()
+            return True
         elif args == '-help':
-            print(INFO); exit()
+            print(INFO)
+            return True
         elif args == '-sources':
             for source in self.sources:
                 print(' > {}'.format(source))
-                exit()
-        else:
-            pass
-
-    def get_applications(self, count=1):
-        for source in self.sources:
-            apps = os.listdir(source)
-            for app in apps:
-                if '.app' in app:
-                    app = app.replace('.app', '')
-                    self.applications.append(app)
-                    app_lower = app.lower()
-                    app_path = source + '/' + app
-                    self.index[app.lower()] = app_path
-                    count = count + 1
-        return(self.applications)
+            return True
         
     def list_applications(self, count=1):
         for app in self.applications:
@@ -83,19 +105,17 @@ if __name__ == '__main__':
     args = sys.argv
     if len(args[1:]) == 0: print(' try: --help'); quit()
     found_args = ' '.join(args[1:])
-    launch.check_args(found_args)
-            
+    if launch.check_args(found_args) == True:
+        exit()
+    
     found_args = found_args.lower()
     found_args = found_args.replace('.app', '')
+    found_args = found_args.replace(' ','\ ')
+
     if found_args in launch.index:
         app = launch.index[found_args]
-        app = app.replace(' ', '\ ')
-        app = app + '.app'
         launch.launch_application(app)
     else:
         print(' err: no application found -> {}'.format(found_args))
-
-
-
 
 
